@@ -513,7 +513,6 @@ static int sd_set_bus_speed_mode(struct mmc_card *card, u8 *status)
 {
 	int err;
 	unsigned int timing = 0;
-	u32 project_info = tegra3_get_project_id();
 
 	switch (card->sd_bus_speed) {
 	case UHS_SDR104_BUS_SPEED:
@@ -549,10 +548,7 @@ static int sd_set_bus_speed_mode(struct mmc_card *card, u8 *status)
 			mmc_hostname(card->host));
 	else {
 		mmc_set_timing(card->host, timing);
-		if (timing == MMC_TIMING_UHS_DDR50 &&
-		    project_info != TEGRA3_PROJECT_TF300T &&
-		    project_info != TEGRA3_PROJECT_TF300TG &&
-		    project_info != TEGRA3_PROJECT_TF300TL)
+		if (timing == MMC_TIMING_UHS_DDR50)
 			mmc_card_set_ddr_mode(card);
 		mmc_set_clock(card->host, card->sw_caps.uhs_max_dtr);
 	}
@@ -931,6 +927,7 @@ static int mmc_sd_init_card(struct mmc_host *host, u32 ocr,
 	int err;
 	u32 cid[4];
 	u32 rocr = 0;
+	u32 project_info = tegra3_get_project_id();
 
 	BUG_ON(!host);
 	WARN_ON(!host->claimed);
@@ -989,7 +986,10 @@ static int mmc_sd_init_card(struct mmc_host *host, u32 ocr,
 		goto free_card;
 
 	/* Initialization sequence for UHS-I cards */
-	if (rocr & SD_ROCR_S18A) {
+	if ((rocr & SD_ROCR_S18A) &&
+		(project_info != TEGRA3_PROJECT_TF300T &&
+			project_info != TEGRA3_PROJECT_TF300TG &&
+			project_info != TEGRA3_PROJECT_TF300TL)) {
 		err = mmc_sd_init_uhs_card(card);
 		if (err)
 			goto free_card;
@@ -1016,10 +1016,10 @@ static int mmc_sd_init_card(struct mmc_host *host, u32 ocr,
 		/*
 		 * SD Workaround: do not set high speed mode for seldom specific sdcard
 		 */
-		if (retries == 1){
-			MMC_printk("last shot, unset highspeed mode to workaround init fail");
-			mmc_card_unset_highspeed(card);
-		}
+                if (retries == 1) {
+                        MMC_printk("clr highspeed mode.");
+                        mmc_card_clr_highspeed(card);
+                }
 
 		/*
 		 * Set bus speed.
@@ -1106,6 +1106,7 @@ static int mmc_sd_detect(struct mmc_host *host)
 		mmc_power_off(host);
 		mmc_release_host(host);
 	}
+
 	return err;
 }
 

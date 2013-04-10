@@ -641,8 +641,8 @@ wl_cfgp2p_enable_discovery(struct wl_priv *wl, struct net_device *dev,
 	}
 set_ie:
 	ret = wl_cfgp2p_set_management_ie(wl, dev,
-	            wl_to_p2p_bss_bssidx(wl, P2PAPI_BSSCFG_DEVICE),
-	            VNDR_IE_PRBREQ_FLAG, ie, ie_len);
+				wl_to_p2p_bss_bssidx(wl, P2PAPI_BSSCFG_DEVICE),
+				VNDR_IE_PRBREQ_FLAG, ie, ie_len);
 
 	if (unlikely(ret < 0)) {
 		CFGP2P_ERR(("set probreq ie occurs error %d\n", ret));
@@ -846,10 +846,11 @@ exit:
 /* Check whether the given IE looks like WFA P2P IE. */
 #define wl_cfgp2p_is_p2p_ie(ie, tlvs, len)	wl_cfgp2p_has_ie(ie, tlvs, len, \
 		(const uint8 *)WFA_OUI, WFA_OUI_LEN, WFA_OUI_TYPE_P2P)
-/* Check whether the given IE looks like WFA WFDisplay IE. */
-#define WFA_OUI_TYPE_WFD	0x0a	/* WiFi Display OUI TYPE */
+	/* Check whether the given IE looks like WFA WFDisplay IE. */
+#define WFA_OUI_TYPE_WFD	0x0a			/* WiFi Display OUI TYPE */
 #define wl_cfgp2p_is_wfd_ie(ie, tlvs, len)	wl_cfgp2p_has_ie(ie, tlvs, len, \
-		(const uint8 *)WFA_OUI, WFA_OUI_LEN, WFA_OUI_TYPE_WFD)
+				(const uint8 *)WFA_OUI, WFA_OUI_LEN, WFA_OUI_TYPE_WFD)
+
 /* Delete and Set a management vndr ie to firmware
  * Parameters:
  * @wl       : wl_private data
@@ -932,8 +933,8 @@ wl_cfgp2p_set_management_ie(struct wl_priv *wl, struct net_device *ndev, s32 bss
 				return -1;
 		}
 		bssidx = 0;
-	} else if (bssidx == -1 && (wl_get_mode_by_netdev(wl, ndev) == WL_MODE_BSS ||
-				    wl_get_mode_by_netdev(wl, ndev) == WL_MODE_IBSS)) {
+	} else if (bssidx == -1 && (wl_get_mode_by_netdev(wl, ndev) == WL_MODE_BSS
+			|| wl_get_mode_by_netdev(wl, ndev) == WL_MODE_IBSS)) {
 		switch (pktflag) {
 			case VNDR_IE_PRBREQ_FLAG :
 				mgmt_ie_buf = wl->sta_info->probe_req_ie;
@@ -1113,13 +1114,14 @@ wl_cfgp2p_find_p2pie(u8 *parse, u32 len)
 	}
 	return NULL;
 }
+
 wifi_wfd_ie_t *
 wl_cfgp2p_find_wfdie(u8 *parse, u32 len)
 {
 	bcm_tlv_t *ie;
 
 	while ((ie = bcm_parse_tlvs(parse, (int)len, DOT11_MNG_VS_ID))) {
-	if (wl_cfgp2p_is_wfd_ie((uint8*)ie, &parse, &len)) {
+		if (wl_cfgp2p_is_wfd_ie((uint8*)ie, &parse, &len)) {
 			return (wifi_wfd_ie_t *)ie;
 		}
 	}
@@ -1229,6 +1231,10 @@ wl_cfgp2p_listen_complete(struct wl_priv *wl, struct net_device *ndev,
 		}
 		cfg80211_remain_on_channel_expired(ndev, wl->last_roc_id, &wl->remain_on_chan,
 		    wl->remain_on_chan_type, GFP_KERNEL);
+		if (wl_add_remove_eventmsg(wl_to_prmry_ndev(wl),
+			WLC_E_P2P_PROBREQ_MSG, false) != BCME_OK) {
+			CFGP2P_ERR((" failed to unset WLC_E_P2P_PROPREQ_MSG\n"));
+		}
 	} else
 		wl_clr_p2p_status(wl, LISTEN_EXPIRED);
 
@@ -1320,6 +1326,9 @@ wl_cfgp2p_discover_listen(struct wl_priv *wl, s32 channel, u32 duration_ms)
 	} else
 		wl_clr_p2p_status(wl, LISTEN_EXPIRED);
 
+	if (wl_add_remove_eventmsg(wl_to_prmry_ndev(wl), WLC_E_P2P_PROBREQ_MSG, true) != BCME_OK) {
+		CFGP2P_ERR((" failed to set WLC_E_P2P_PROPREQ_MSG\n"));
+	}
 	wl_cfgp2p_set_p2p_mode(wl, WL_P2P_DISC_ST_LISTEN, channel, (u16) duration_ms,
 	            wl_to_p2p_bss_bssidx(wl, P2PAPI_BSSCFG_DEVICE));
 	_timer = &wl->p2p->listen_timer;
@@ -1754,6 +1763,8 @@ wl_cfgp2p_set_p2p_ps(struct wl_priv *wl, struct net_device *ndev, char* buf, int
 				WLC_SET_PM, &pm, sizeof(pm), true);
 			if (unlikely(ret)) {
 				CFGP2P_ERR(("error (%d)\n", ret));
+			} else {
+				wl_cfg80211_update_power_mode(ndev);
 			}
 		}
 	}

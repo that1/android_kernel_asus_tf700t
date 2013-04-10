@@ -4267,10 +4267,6 @@ static noinline void __schedule_bug(struct task_struct *prev)
 		show_regs(regs);
 	else
 		dump_stack();
-#ifdef CONFIG_DEBUG_ASUS
-	//Force system hang for debugging under SMP
-	BUG_ON(1);
-#endif
 }
 
 /*

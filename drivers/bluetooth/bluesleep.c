@@ -740,9 +740,7 @@ static int __init bluesleep_init(void)
 
 	BT_INFO("BlueSleep Mode Driver Ver %s", VERSION);
 
-	printk(KERN_INFO "%s+ #####\n", __func__);
 	retval = platform_driver_register(&bluesleep_driver);
-	printk(KERN_INFO "%s- #####\n", __func__);
 	if (retval)
 		return retval;
 

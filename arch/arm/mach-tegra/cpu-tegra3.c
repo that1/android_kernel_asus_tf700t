@@ -153,9 +153,12 @@ static int hp_state_set(const char *arg, const struct kernel_param *kp)
 
 	if (ret == 0) {
 		if ((hp_state == TEGRA_HP_DISABLED) &&
-		    (old_state != TEGRA_HP_DISABLED))
+		    (old_state != TEGRA_HP_DISABLED)) {
+			mutex_unlock(tegra3_cpu_lock);
+			cancel_delayed_work_sync(&hotplug_work);
+			mutex_lock(tegra3_cpu_lock);
 			pr_info("Tegra auto-hotplug disabled\n");
-		else if (hp_state != TEGRA_HP_DISABLED) {
+		} else if (hp_state != TEGRA_HP_DISABLED) {
 			if (old_state == TEGRA_HP_DISABLED) {
 				pr_info("Tegra auto-hotplug enabled\n");
 				hp_init_stats();
@@ -370,7 +373,7 @@ static int min_cpus_notify(struct notifier_block *nb, unsigned long n, void *p)
 {
 	mutex_lock(tegra3_cpu_lock);
 
-	if ((n >= 1) && is_lp_cluster()) {
+	if ((n >= 1) && is_lp_cluster() && !no_lp) {
 		/* make sure cpu rate is within g-mode range before switching */
 		unsigned int speed = max((unsigned long)tegra_getspeed(0),
 			clk_get_min_rate(cpu_g_clk) / 1000);
