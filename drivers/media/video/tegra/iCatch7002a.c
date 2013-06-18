@@ -2957,7 +2957,7 @@ static int sensor_probe(struct i2c_client *client,
 {
 	int err=0;
 
-	pr_info("yuv %s, compiled at %s %s\n",__func__,__DATE__,__TIME__);
+	pr_info("yuv i7002a %s, compiled at %s %s\n",__func__,__DATE__,__TIME__);
 
 	info = kzalloc(sizeof(struct sensor_info), GFP_KERNEL);
 
@@ -3663,6 +3663,11 @@ static ssize_t dbg_iCatch7002a_vga_status_read(struct file *file, char __user *b
 	if (*ppos)
 		return 0;	/* the end */
 
+	if (!info)
+	{
+		return 0;
+	}
+
 	if (sensor_opened == false) {
 		if (info->pdata && info->pdata->power_on) {
 			info->pdata->power_on();
@@ -3790,6 +3795,11 @@ static ssize_t dbg_iCatch7002a_camera_status_read(struct file *file, char __user
 
 	if (*ppos)
 		return 0;	/* the end */
+
+	if (!info)
+	{
+		return 0;
+	}
 
 	if (sensor_opened == false) {
 		if (info->pdata && info->pdata->power_on) {
