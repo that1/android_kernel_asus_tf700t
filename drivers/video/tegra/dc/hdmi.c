@@ -1240,6 +1240,25 @@ static int tegra_dc_calc_clock_per_frame(const struct fb_videomode *mode)
 	       (mode->upper_margin + mode->yres +
 		mode->lower_margin + mode->vsync_len);
 }
+static bool tegra_dc_hdmi_mode_equal(const struct fb_videomode *mode1,
+					const struct fb_videomode *mode2)
+{
+	int clock_per_frame = tegra_dc_calc_clock_per_frame(mode1);
+
+	/* allows up to 1Hz of pixclock difference */
+	if (mode1->pixclock != mode2->pixclock) {
+		return (mode1->xres == mode2->xres &&
+			mode1->yres == mode2->yres &&
+			mode1->vmode == mode2->vmode &&
+			(abs(PICOS2KHZ(mode1->pixclock) -
+			PICOS2KHZ(mode2->pixclock)) *
+			1000 / clock_per_frame <= 1));
+	} else {
+		return (mode1->xres == mode2->xres &&
+			mode1->yres == mode2->yres &&
+			mode1->vmode == mode2->vmode);
+	}
+}
 
 static bool tegra_dc_hdmi_valid_pixclock(const struct tegra_dc *dc,
 					const struct fb_videomode *mode)
@@ -1272,6 +1291,20 @@ static bool tegra_dc_reload_mode(struct fb_videomode *mode)
 				= &tegra_dc_hdmi_supported_cvt_modes[i];
 		if (tegra_dc_cvt_mode_equal(cvt_mode, mode)) {
 			memcpy(mode, cvt_mode, sizeof(*mode));
+			return true;
+		}
+	}
+	return false;
+}
+
+static bool tegra_dc_reload_supported_mode(struct fb_videomode *mode)
+{
+	int i = 0;
+	for (i = 0; i < ARRAY_SIZE(tegra_dc_hdmi_supported_modes); i++) {
+		const struct fb_videomode *supported_mode
+				= &tegra_dc_hdmi_supported_modes[i];
+		if (tegra_dc_hdmi_mode_equal(supported_mode, mode)) {
+			memcpy(mode, supported_mode, sizeof(*mode));
 			return true;
 		}
 	}
@@ -1356,6 +1389,10 @@ static bool tegra_dc_hdmi_mode_filter(const struct tegra_dc *dc,
 			 * CVT timing standards.
 			 */
 			if (!tegra_dc_reload_mode(mode))
+				return false;
+		}
+		else{
+			if(!tegra_dc_reload_supported_mode(mode))
 				return false;
 		}
 		mode->flag = FB_MODE_IS_DETAILED;
