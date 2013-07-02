@@ -3301,6 +3301,9 @@ static ssize_t dbg_i7002a_bin_dump_read(struct file *file, char __user *buf, siz
 	if (*ppos)
 		return 0;	/* the end */
 
+	if (!info)
+		return 0;
+
 	i7002a_isp_on(1);
 
 	//I2CDataWrite(0x70c4,0x00);
