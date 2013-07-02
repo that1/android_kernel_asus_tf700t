@@ -3247,6 +3247,9 @@ static ssize_t dbg_i7002a_page_dump_read(struct file *file, char __user *buf, si
 	if (*ppos)
 		return 0;	/* the end */
 
+	if (!info)
+		return 0;
+
 	i7002a_isp_on(1);
 
 	len = snprintf(bp, dlen, "page_index=%d (0x%X)\n", dbg_i7002a_page_index, dbg_i7002a_page_index);
@@ -3422,6 +3425,9 @@ static ssize_t dbg_i7002a_fw_header_dump_read(struct file *file, char __user *bu
 	if (*ppos)
 		return 0;	/* the end */
 
+	if (!info)
+		return 0;
+
 	i7002a_isp_on(1);
 
 	/* dump fw1 header */
@@ -3493,6 +3499,9 @@ static ssize_t dbg_fw_update_read(struct file *file, char __user *buf, size_t co
 
 	if (*ppos)
 		return 0;	/* the end */
+
+	if (!info)
+		return 0;
 
 	switch(fw_update_status) {
 	case ICATCH_FW_NO_CMD:
