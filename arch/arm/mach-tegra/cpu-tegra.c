@@ -503,9 +503,13 @@ int tegra_edp_update_thermal_zone(int temperature)
 	int index;
 
 #ifdef ASUS_OVERCLOCK
-	if (temperature >= 70) {
+	if (temperature >= 70 && temperature < 85) {
+		if (!edp_enable)
+			printk("enabling edp, temperature=%d\n", temperature);
 		edp_enable = 1;
 	} else {
+		if (edp_enable)
+			printk("disabling edp, temperature=%d\n", temperature);
 		edp_enable = 0;
 	}
 #endif
