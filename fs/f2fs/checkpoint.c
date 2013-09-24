@@ -206,12 +206,8 @@ int acquire_orphan_inode(struct f2fs_sb_info *sbi)
 void release_orphan_inode(struct f2fs_sb_info *sbi)
 {
 	mutex_lock(&sbi->orphan_inode_mutex);
-	if (sbi->n_orphans == 0) {
-		f2fs_msg(sbi->sb, KERN_ERR, "releasing "
-			"unacquired orphan inode");
-		f2fs_handle_error(sbi);
-	} else
-		sbi->n_orphans--;
+	BUG_ON(sbi->n_orphans == 0);
+	sbi->n_orphans--;
 	mutex_unlock(&sbi->orphan_inode_mutex);
 }
 
@@ -258,13 +254,8 @@ void remove_orphan_inode(struct f2fs_sb_info *sbi, nid_t ino)
 		if (orphan->ino == ino) {
 			list_del(&orphan->list);
 			kmem_cache_free(orphan_entry_slab, orphan);
-			if (sbi->n_orphans == 0) {
-				f2fs_msg(sbi->sb, KERN_ERR, "removing "
-						"unacquired orphan inode %d",
-						ino);
-				f2fs_handle_error(sbi);
-			} else
-				sbi->n_orphans--;
+			BUG_ON(sbi->n_orphans == 0);
+			sbi->n_orphans--;
 			break;
 		}
 	}
