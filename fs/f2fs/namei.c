@@ -240,14 +240,15 @@ static int f2fs_unlink(struct inode *dir, struct dentry *dentry)
 	if (!de)
 		goto fail;
 
+	ilock = mutex_lock_op(sbi);
 	err = acquire_orphan_inode(sbi);
 	if (err) {
+		mutex_unlock_op(sbi, ilock);
 		kunmap(page);
 		f2fs_put_page(page, 0);
 		goto fail;
 	}
 
-	ilock = mutex_lock_op(sbi);
 	f2fs_delete_entry(de, page, inode);
 	mutex_unlock_op(sbi, ilock);
 
