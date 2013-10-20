@@ -541,6 +541,8 @@ struct tegra_fb_info *tegra_fb_register(struct nvhost_device *ndev,
 	tegra_fb->fb_mem = fb_mem;
 	tegra_fb->xres = fb_data->xres;
 	tegra_fb->yres = fb_data->yres;
+	tegra_fb->curr_xoffset = -1;
+	tegra_fb->curr_yoffset = -1;
 
 	if (fb_mem) {
 		fb_size = resource_size(fb_mem);
