@@ -380,8 +380,8 @@ struct f2fs_sb_info {
 	struct mutex node_write;		/* locking node writes */
 	struct mutex writepages;		/* mutex for writepages() */
 	unsigned char next_lock_num;		/* round-robin global locks */
-	int por_doing;				/* recovery is doing or not */
-	int on_build_free_nids;			/* build_free_nids is doing */
+	bool por_doing;				/* recovery is doing or not */
+	bool on_build_free_nids;		/* build_free_nids is doing */
 	struct task_struct *cp_task;		/* checkpoint task */
 
 	/* for orphan inode management */

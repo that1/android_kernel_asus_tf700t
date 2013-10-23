@@ -922,7 +922,7 @@ static int f2fs_fill_super(struct super_block *sb, void *data, int silent)
 	for (i = 0; i < NR_GLOBAL_LOCKS; i++)
 		mutex_init(&sbi->fs_lock[i]);
 	mutex_init(&sbi->node_write);
-	sbi->por_doing = 0;
+	sbi->por_doing = false;
 	spin_lock_init(&sbi->stat_lock);
 	init_rwsem(&sbi->bio_sem);
 	init_sb_info(sbi);
