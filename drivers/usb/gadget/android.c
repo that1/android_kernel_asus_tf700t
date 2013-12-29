@@ -910,7 +910,7 @@ static struct android_usb_function *supported_functions[] = {
 	&mtp_function,
 	&ptp_function,
 	&rndis_function,
-	//&mass_storage_function,
+	&mass_storage_function,
 	&accessory_function,
 	&audio_source_function,
 	NULL
