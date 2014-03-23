@@ -244,6 +244,28 @@ static int asusdec_kp_sci_table[]={0, KEY_SLEEP, KEY_WLAN, KEY_BLUETOOTH,
 		KEY_WWW, ASUSDEC_KEY_SETTING, KEY_PREVIOUSSONG, KEY_PLAYPAUSE,
 		KEY_NEXTSONG, KEY_MUTE, KEY_VOLUMEDOWN, KEY_VOLUMEUP};
 
+/* CM-compatible key mapping
+https://github.com/CyanogenMod/android_kernel_asus_tf700t/commit/cd28094a30b81401cf8a259d9a1353decdd5427d
+*/
+#define ASUSDEC_KEY_TOUCHPAD_TOGGLE 0xCA	/* KEY_PROG3 */
+static int asusdec_kp_sci_table_cm[]={0, KEY_SLEEP, KEY_WLAN, KEY_BLUETOOTH,
+		ASUSDEC_KEY_TOUCHPAD_TOGGLE, KEY_BRIGHTNESSDOWN, KEY_BRIGHTNESSUP, KEY_BRIGHTNESS_ZERO /*ASUSDEC_KEY_AUTOBRIGHT*/,
+		KEY_CAMERA, -9, -10, -11,
+		-12, -13, -14, -15,
+		KEY_WWW, KEY_SETUP /*ASUSDEC_KEY_SETTING*/, KEY_PREVIOUSSONG, KEY_PLAYPAUSE,
+		KEY_NEXTSONG, KEY_MUTE, KEY_VOLUMEDOWN, KEY_VOLUMEUP};
+
+/* Function keys */
+static int asusdec_kp_sci_table_fn[]={0, KEY_SLEEP, KEY_F1, KEY_F2,
+		KEY_F3, KEY_F4, KEY_F5, KEY_F6,
+		KEY_F7, -9, -10, -11,
+		-12, -13, -14, -15,
+		KEY_F8, KEY_F9, KEY_F10, KEY_F11,
+		KEY_F12, KEY_MUTE, KEY_VOLUMEDOWN, KEY_VOLUMEUP};
+
+int cm_mode = 0;
+module_param(cm_mode, int, 0644);
+
 /*
  * functions definition
  */
@@ -1376,10 +1398,23 @@ static void asusdec_kp_kbc(void){
 		}
 	}
 }
+
+static int are_fn_keys_active(struct input_dev *dev)
+{
+	return test_bit(KEY_LEFTSHIFT, dev->key) || test_bit(KEY_RIGHTSHIFT, dev->key);
+}
+
 static void asusdec_kp_sci(void){
 	int ec_signal = ec_chip->i2c_data[2];
 
-	ec_chip->keypad_data.input_keycode = asusdec_kp_sci_table[ec_signal];
+
+	if (are_fn_keys_active(ec_chip->indev))
+		ec_chip->keypad_data.input_keycode = asusdec_kp_sci_table_fn[ec_signal];
+	else if (cm_mode)
+		ec_chip->keypad_data.input_keycode = asusdec_kp_sci_table_cm[ec_signal];
+	else
+		ec_chip->keypad_data.input_keycode = asusdec_kp_sci_table[ec_signal];
+
 	if(ec_chip->keypad_data.input_keycode > 0){
 		ASUSDEC_INFO("input_keycode = 0x%x\n", ec_chip->keypad_data.input_keycode);
 
