@@ -51,12 +51,11 @@
 #define SYSTEM_NORMAL_MODE	(0)
 #define SYSTEM_BALANCE_MODE	(1)
 #define SYSTEM_PWRSAVE_MODE	(2)
-#define SYSTEM_OVERCLOCK_1P5G_MODE		(3)
-#define SYSTEM_MODE_END 		(SYSTEM_OVERCLOCK_1P5G_MODE + 1)
+#define SYSTEM_MODE_END 		(SYSTEM_PWRSAVE_MODE + 1)
 #define SYSTEM_PWRSAVE_MODE_MAX_FREQ	(1000000)
 #define ASUS_OVERCLOCK
 
-unsigned int power_mode_table[SYSTEM_MODE_END] = {1000000,1200000,1400000,1500000};
+unsigned int power_mode_table[SYSTEM_MODE_END] = {1000000,1200000,1500000};
 
 #define CAMERA_ENABLE_EMC_MINMIAM_RATE (667000000)
 /* tegra throttling and edp governors require frequencies in the table
@@ -258,14 +257,10 @@ static int system_mode_set(const char *arg, const struct kernel_param *kp)
 	ret = param_set_int(arg, kp);
 	if (ret == 0) {
 		printk("system_mode_set system_mode=%u\n",system_mode);
-#ifdef ASUS_OVERCLOCK
-		if( (system_mode<SYSTEM_NORMAL_MODE) || (system_mode>SYSTEM_OVERCLOCK_1P5G_MODE))
-			system_mode=SYSTEM_NORMAL_MODE;
-#else
 
 		if((system_mode < SYSTEM_NORMAL_MODE) || (system_mode > SYSTEM_PWRSAVE_MODE))
 			system_mode = SYSTEM_NORMAL_MODE;
-#endif
+
 		tegra_cpu_set_speed_cap(NULL);
 	}
 
@@ -338,12 +333,6 @@ module_param_cb(enable_pwr_save, &tegra_pwr_save_ops, &pwr_save, 0644);
 		new_speed = power_mode_table[SYSTEM_PWRSAVE_MODE];
 	else  if((system_mode == SYSTEM_NORMAL_MODE) && (requested_speed > power_mode_table[SYSTEM_NORMAL_MODE]))
 		new_speed = power_mode_table[SYSTEM_NORMAL_MODE];
-
-#ifdef ASUS_OVERCLOCK
-        else  if( (system_mode==SYSTEM_OVERCLOCK_1P5G_MODE ) && ( requested_speed > power_mode_table[SYSTEM_OVERCLOCK_1P5G_MODE] ))
-		new_speed=power_mode_table[SYSTEM_OVERCLOCK_1P5G_MODE] ;
-
-#endif
 
 	return new_speed;
 }
@@ -452,7 +441,7 @@ static unsigned int edp_predict_limit(unsigned int cpus)
 		limit = min(limit, system_edp_limits[cpus - 1]);
 	limit = min(limit, pwr_cap_limits[cpus - 1]);//pwr save
 
-    if( system_mode == SYSTEM_OVERCLOCK_1P5G_MODE && cpu_edp_limits[edp_thermal_index].temperature > 25 && cpu_edp_limits[edp_thermal_index].temperature < 65 )
+    if( system_mode == SYSTEM_NORMAL_MODE && cpu_edp_limits[edp_thermal_index].temperature > 25 && cpu_edp_limits[edp_thermal_index].temperature < 65 )
 	{
 		/* override EDP limits */
 		limit = 1800000;
@@ -701,11 +690,10 @@ module_param_cb(pwr_cap_limit_4, &pwr_cap_ops, &pwr_cap_limits[3], 0644);
 static int pwr_mode_table_debugfs_show(struct seq_file *s, void *data)
 {
 	seq_printf(s, "-- CPU power mode table --\n");
-	seq_printf(s, "Power Saving=%u \n Balanced=%u \n Normal=%u \n Overclocked=%u\n",
+	seq_printf(s, "Power Saving=%u \n Balanced=%u \n Normal=%u \n \n",
 			   power_mode_table[2],
 			   power_mode_table[1],
-			   power_mode_table[0],
-               power_mode_table[3]);
+			   power_mode_table[0]);
 	return 0;
 }
 
@@ -1085,11 +1073,9 @@ static struct notifier_block tegra_cpu_pm_notifier = {
 
 void rebuild_max_freq_table(unsigned int max_rate)
 {
-	power_mode_table[SYSTEM_NORMAL_MODE] =  1500000;
-	power_mode_table[SYSTEM_BALANCE_MODE] = 1300000;
+	power_mode_table[SYSTEM_NORMAL_MODE] =  1800000;
+	power_mode_table[SYSTEM_BALANCE_MODE] = 1400000;
 	power_mode_table[SYSTEM_PWRSAVE_MODE] = SYSTEM_PWRSAVE_MODE_MAX_FREQ;
-        power_mode_table[SYSTEM_OVERCLOCK_1P5G_MODE]=1800000;
-
 }
 
 static int tegra_cpu_init(struct cpufreq_policy *policy)
