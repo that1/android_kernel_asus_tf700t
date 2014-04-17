@@ -67,6 +67,10 @@ const struct linux_logo * __init_refok fb_find_logo(int depth)
 		/* Generic Linux logo */
 		logo = &logo_linux_clut224;
 #endif
+#ifdef CONFIG_LOGO_ANDROIDTUX_CLUT224
+		/* Android Tux Linux logo */
+		logo = &logo_androidtux_clut224;
+#endif
 #ifdef CONFIG_LOGO_BLACKFIN_CLUT224
 		/* Blackfin Linux logo */
 		logo = &logo_blackfin_clut224;
