@@ -256,15 +256,23 @@ static int asusdec_kp_sci_table_cm[]={0, KEY_SLEEP, KEY_WLAN, KEY_BLUETOOTH,
 		KEY_NEXTSONG, KEY_MUTE, KEY_VOLUMEDOWN, KEY_VOLUMEUP};
 
 /* Function keys */
-static int asusdec_kp_sci_table_fn[]={0, KEY_SLEEP, KEY_F1, KEY_F2,
+static int asusdec_kp_sci_table_fn[]={0, KEY_DELETE, KEY_F1, KEY_F2,
 		KEY_F3, KEY_F4, KEY_F5, KEY_F6,
 		KEY_F7, -9, -10, -11,
 		-12, -13, -14, -15,
 		KEY_F8, KEY_F9, KEY_F10, KEY_F11,
-		KEY_F12, KEY_MUTE, KEY_VOLUMEDOWN, KEY_VOLUMEUP};
+		KEY_F12, KEY_INSERT, KEY_VOLUMEDOWN, KEY_VOLUMEUP};
 
 int cm_mode = 0;
 module_param(cm_mode, int, 0644);
+
+#define KEY_FLAGS_FN_LOCK 1		/* Fn keys without modifier */
+#define KEY_FLAGS_BACK_AS_ESC 2
+#define KEY_FLAGS_SEARCH_AS_LEFTALT 4
+#define KEY_FLAGS_HOME_AS_LEFTMETA 8	/* aka Super_L or "Windows key" */
+
+int key_flags = 0;
+module_param(key_flags, int, 0644);
 
 /*
  * functions definition
@@ -928,7 +936,10 @@ static int asusdec_kp_key_mapping(int x)
 {
 	switch (x){
 		case ASUSDEC_KEYPAD_ESC:
-			return KEY_BACK;
+			if (key_flags & KEY_FLAGS_BACK_AS_ESC)
+				return KEY_ESC;
+			else
+				return KEY_BACK;
 
 		case ASUSDEC_KEYPAD_KEY_WAVE:
 			return KEY_GRAVE;
@@ -1102,13 +1113,19 @@ static int asusdec_kp_key_mapping(int x)
 			return KEY_DOWN;
 
 		case ASUSDEC_KEYPAD_RIGHTWIN:
-			return KEY_SEARCH;
+			if (key_flags & KEY_FLAGS_SEARCH_AS_LEFTALT)
+				return KEY_LEFTALT;
+			else
+				return KEY_SEARCH;
 
 		case ASUSDEC_KEYPAD_LEFTCTRL:
 			return KEY_LEFTCTRL;
 
 		case ASUSDEC_KEYPAD_LEFTWIN:
-			return KEY_HOMEPAGE;
+			if (key_flags & KEY_FLAGS_HOME_AS_LEFTMETA)
+				return KEY_LEFTMETA;
+			else
+				return KEY_HOMEPAGE;
 
 		case ASUSDEC_KEYPAD_LEFTALT:
 			return KEY_LEFTALT;
@@ -1401,7 +1418,7 @@ static void asusdec_kp_kbc(void){
 
 static int are_fn_keys_active(struct input_dev *dev)
 {
-	return test_bit(KEY_LEFTSHIFT, dev->key) || test_bit(KEY_RIGHTSHIFT, dev->key);
+	return test_bit(KEY_RIGHTALT, dev->key) ^ !!(key_flags & KEY_FLAGS_FN_LOCK);
 }
 
 static void asusdec_kp_sci(void){
