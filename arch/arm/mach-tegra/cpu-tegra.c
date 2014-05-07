@@ -110,7 +110,7 @@ int Asus_camera_enable_set_emc_rate(unsigned long rate)
 	cpu_emc_cur_rate = clk_get_rate(emc_clk);
 	emc_cur_rate = clk_get_rate(c);
 
-	printk("%s : camera enable emc_clk->min_rate to %d\n",
+	printk("%s : camera enable emc_clk->min_rate to %lu\n",
 		__func__, camera_emc_enable_mini_rete);
 	camera_enable_cpu_emc_mini_rate = emc_clk->min_rate;
 	emc_clk->min_rate = camera_emc_enable_mini_rete;
@@ -152,8 +152,8 @@ int Asus_camera_disable_set_emc_rate(void)
 	cpu_emc_cur_rate = clk_get_rate(emc_clk);
 	emc_cur_rate = clk_get_rate(c);
 
-	printk("%s : camera disable emc_clk->min_rate to %d\n", __func__, camera_enable_cpu_emc_mini_rate);
-	printk("%s : camera disable c->min_rate to %d\n", __func__, camera_enable_emc_mini_rate);
+	printk("%s : camera disable emc_clk->min_rate to %lu\n", __func__, camera_enable_cpu_emc_mini_rate);
+	printk("%s : camera disable c->min_rate to %lu\n", __func__, camera_enable_emc_mini_rate);
 	emc_clk->min_rate = camera_enable_cpu_emc_mini_rate;
 	c->min_rate = camera_enable_emc_mini_rate;
 
