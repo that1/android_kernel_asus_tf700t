@@ -274,6 +274,27 @@ module_param(cm_mode, int, 0644);
 int key_flags = 0;
 module_param(key_flags, int, 0644);
 
+int key_autorepeat = 0;
+static int key_autorepeat_set(const char *arg, const struct kernel_param *kp)
+{
+	int ret = param_set_int(arg, kp);
+	if (ret == 0) {
+		if (ec_chip && ec_chip->indev)
+			if (key_autorepeat)
+				set_bit(EV_REP, ec_chip->indev->evbit);
+			else
+				clear_bit(EV_REP, ec_chip->indev->evbit);
+	}
+	return ret;
+}
+
+static struct kernel_param_ops key_autorepeat_ops = {
+	.set = key_autorepeat_set,
+	.get = param_get_int,
+};
+module_param_cb(key_autorepeat, &key_autorepeat_ops, &key_autorepeat, 0644);
+
+
 /*
  * functions definition
  */
