@@ -92,6 +92,7 @@ static int f2fs_vm_page_mkwrite(struct vm_area_struct *vma,
 	set_page_dirty(page);
 	SetPageUptodate(page);
 
+	trace_f2fs_vm_page_mkwrite(page, DATA);
 mapped:
 	/* fill the page */
 	wait_on_page_writeback(page);
@@ -200,8 +201,9 @@ int f2fs_sync_file(struct file *file, loff_t start, loff_t end, int datasync)
 			if (ret)
 				goto out;
 		}
-		filemap_fdatawait_range(sbi->node_inode->i_mapping,
-							0, LONG_MAX);
+		ret = wait_on_node_pages_writeback(sbi, inode->i_ino);
+		if (ret)
+			goto out;
 		ret = blkdev_issue_flush(inode->i_sb->s_bdev, GFP_KERNEL, NULL);
 	}
 out:
@@ -307,7 +309,7 @@ static int truncate_blocks(struct inode *inode, u64 from)
 		count = ADDRS_PER_BLOCK;
 
 	count -= dn.ofs_in_node;
-	BUG_ON(count < 0);
+	f2fs_bug_on(count < 0);
 
 	if (dn.ofs_in_node || IS_INODE(dn.node_page)) {
 		truncate_data_blocks_range(&dn, count);

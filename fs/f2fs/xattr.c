@@ -373,7 +373,7 @@ static inline int write_all_xattrs(struct inode *inode, __u32 hsize,
 			alloc_nid_failed(sbi, new_nid);
 			return PTR_ERR(xpage);
 		}
-		BUG_ON(new_nid);
+		f2fs_bug_on(new_nid);
 	} else {
 		struct dnode_of_data dn;
 		set_new_dnode(&dn, inode, NULL, NULL, new_nid);
@@ -521,7 +521,7 @@ static int __f2fs_setxattr(struct inode *inode, int name_index,
 		 */
 		free = MIN_OFFSET(inode) - ((char *)last - (char *)base_addr);
 		if (found)
-			free = free - ENTRY_SIZE(here);
+			free = free + ENTRY_SIZE(here);
 
 		if (free < newsize) {
 			error = -ENOSPC;
