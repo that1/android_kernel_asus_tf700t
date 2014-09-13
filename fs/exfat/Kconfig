@@ -1,0 +1,7 @@
+config EXFAT_FS
+	tristate "ExFAT filesystem support (EXPERIMENTAL)"
+	depends on BLOCK
+	help
+	  ExFAT filesystem support by Samsung
+
+	  If unsure, say N.
